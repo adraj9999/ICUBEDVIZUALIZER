@@ -161,7 +161,7 @@ def render_time_series_forecast(df_featured: pd.DataFrame, model, model_name: st
             })
             forecast_df['Upper_Bound'] = forecast_df['Predicted_ICU_Beds'] * 1.15
             forecast_df['Lower_Bound'] = forecast_df['Predicted_ICU_Beds'] * 0.85
-            forecast_df['Date_Formatted'] = forecast_df['Date'].dt.strftime('%b %d, %Y')
+            forecast_df['Date_Formatted'] = forecast_df['Date'].dt.strftime('%b %d')
 
             # --- Visualization ---
             fig = go.Figure()
@@ -566,3 +566,4 @@ with tab6:
 
     st.markdown("---")
     st.success("This dashboard serves as a powerful decision-support tool, bridging the gap between advanced AI and practical, real-world healthcare operations.")
+
