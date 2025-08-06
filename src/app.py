@@ -126,7 +126,7 @@ def retrain_model(model_name: str, data: pd.DataFrame) -> Any:
 
 def render_time_series_forecast(df_featured: pd.DataFrame, model, model_name: str):
     """Renders the time series forecasting UI."""
-    st.header(f"🔮 Dynamic Time Series Forecasting ({model_name})")
+    st.header(f"Dynamic Time Series Forecasting ({model_name})")
     st.info("Generate a dynamic 14-day forecast for a selected region based on the model's current prediction.")
 
     region = st.selectbox(
@@ -227,7 +227,7 @@ tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
 ])
 
 with tab1:
-    st.header(f"📍 Single Region Forecast ({active_model_name})")
+    st.header(f"Single Region Forecast ({active_model_name})")
     
     col_left, col_right = st.columns([1, 2])
     with col_left:
