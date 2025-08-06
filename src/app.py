@@ -190,25 +190,30 @@ def render_time_series_forecast(df_featured: pd.DataFrame, model, model_name: st
             st.plotly_chart(fig, use_container_width=True)
 
 # --- Load all files and initialize app state ---
-df_raw, df_featured = load_and_process_data(DATA_PATH)
-xgb_model, lgb_model = load_models(XGB_MODEL_PATH, LGB_MODEL_PATH)
+def retrain_model(model_name: str, data: pd.DataFrame) -> Any:
+    """Trains a new model (XGBoost or LightGBM) on the provided data."""
+    st.write(f"Starting retraining for {model_name}...")
+    y = data[DEFAULT_TARGET_COL]
+    X = data.drop(columns=DEFAULT_EXCLUDED_COLS, errors='ignore').select_dtypes(include=np.number)
 
-MODELS = {}
-if xgb_model: MODELS["XGBoost"] = xgb_model
-if lgb_model: MODELS["LightGBM"] = lgb_model
+    # FIX: Sanitize column names before training to remove special characters
+    # that cause errors in LightGBM.
+    if model_name == "LightGBM":
+        X.columns = ["".join (c if c.isalnum() else '_' for c in str(x)) for x in X.columns]
 
-if 'champion_models' not in st.session_state:
-    st.session_state.champion_models = copy.deepcopy(MODELS)
-if 'challenger_models' not in st.session_state:
-    st.session_state.challenger_models = {}
+    X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
 
-if df_featured is None:
-    st.warning("Dataset could not be loaded. The application cannot continue.")
-    st.stop()
+    if model_name == "XGBoost":
+        model = xgb.XGBRegressor(random_state=42, n_estimators=100, objective='reg:squarederror')
+    elif model_name == "LightGBM":
+        model = lgb.LGBMRegressor(random_state=42, n_estimators=100)
+    else:
+        st.error(f"Unknown model name '{model_name}' for retraining.")
+        return None
 
-if not MODELS:
-    st.error("No models could be loaded. Please check file paths. The application cannot continue.")
-    st.stop()
+    model.fit(X_train, y_train)
+    st.write("Retraining complete.")
+    return model
 
 # ─────────────────── Sidebar to Select Model ────────────────────────
 st.sidebar.header("⚙ Controls")
@@ -569,3 +574,4 @@ with tab6:
 
     st.markdown("---")
     st.success("This dashboard serves as a powerful decision-support tool, bridging the gap between advanced AI and practical, real-world healthcare operations.")
+
