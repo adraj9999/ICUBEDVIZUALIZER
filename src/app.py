@@ -218,12 +218,12 @@ model_features = model.feature_names_in_
 
 # ───────────────────────── Main Application Tabs ────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "📊 Dashboard & Explainability", 
-    "🌍 Bulk Forecast", 
-    "⚖️ Model Comparison", 
-    "🔍 Data Explorer & EDA",
-    "🛠️ MLOps & Monitoring",
-    "📌 Conclusion & Recommendations"
+    "Dashboard & Explainability", 
+    "Bulk Forecast", 
+    "Model Comparison", 
+    "Data Explorer & EDA",
+    "MLOps & Monitoring",
+    "Conclusion & Recommendations"
 ])
 
 with tab1:
@@ -238,7 +238,7 @@ with tab1:
             st.metric("Available Hospital Beds", f"{int(region_row['Available Hospital Beds'].iloc[0]):,}")
         st.metric("Adult Population", f"{int(region_row['Adult Population'].iloc[0]):,}")
         
-        if st.button(f"🔮 Predict & Explain for {region}", type="primary", use_container_width=True):
+        if st.button(f"Predict & Explain for {region}", type="primary", use_container_width=True):
             try:
                 X_single = prepare_data_for_model(region_row, model_features)
                 pred_single = float(model.predict(X_single)[0])
@@ -246,7 +246,7 @@ with tab1:
                 st.subheader("📈 Prediction Results")
                 st.metric("Predicted Available ICU Beds", f"{pred_single:,.0f}")
                 
-                with st.expander("🔬 View Prediction Explanation (SHAP & LIME)", expanded=True):
+                with st.expander("View Prediction Explanation (SHAP & LIME)", expanded=True):
                     X_all = prepare_data_for_model(df_featured, model_features)
     
                     st.subheader("SHAP Waterfall Plot")
@@ -287,7 +287,7 @@ with tab1:
         st.plotly_chart(fig, use_container_width=True)
 
 with tab2:
-    st.header("🌍 Forecast for All HRRs")
+    st.header("Forecast for All HRRs")
     if 'forecast_df' not in st.session_state:
         st.session_state.forecast_df = None
 
@@ -316,7 +316,7 @@ with tab2:
         st.plotly_chart(fig2, use_container_width=True)
 
 with tab3:
-    st.header("⚖️ Model Comparison")
+    st.header("Model Comparison")
     st.info("Metrics are calculated on a 20% hold-out test set to match the Colab evaluation.")
 
     if len(MODELS) < 2:
@@ -373,10 +373,10 @@ with tab3:
         st.plotly_chart(fig_errors, use_container_width=True)
 
 with tab4:
-    st.header("🔍 Data Explorer & EDA")
+    st.header("Data Explorer & EDA")
 
     # --- Historical Projections ---
-    st.subheader("📈 Historical ICU Bed Needs Projection")
+    st.subheader("Historical ICU Bed Needs Projection")
     time_cols = [col for col in df_raw.columns if "ICU Beds Needed" in col]
     if time_cols:
         default_regions = df_raw["HRR"].head(3).tolist()
@@ -396,7 +396,7 @@ with tab4:
     st.markdown("---")
 
     # --- Exploratory Data Analysis (EDA) ---
-    st.subheader("📊 Exploratory Scatter Plot")
+    st.subheader("Exploratory Scatter Plot")
     st.markdown("Explore relationships between different features in the dataset.")
     
     numeric_cols = df_featured.select_dtypes(include=np.number).columns
@@ -419,9 +419,9 @@ with tab4:
 
 
 with tab5:
-    st.header("🛠️ MLOps & Monitoring")
+    st.header("MLOps & Monitoring")
     
-    st.subheader("🧪 Model Management (Champion-Challenger)")
+    st.subheader("Model Management (Champion-Challenger)")
     st.info("Retrain models and compare them against the current champion to ensure peak performance.")
 
     if not st.session_state.champion_models:
@@ -433,12 +433,12 @@ with tab5:
     
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("🏆 Champion Model")
+        st.subheader("Champion Model")
         st.write(f"*Type:* {model_to_manage}")
         st.write(f"This is the current production model.")
         
     with col2:
-        st.subheader("⚔️ Challenger Model")
+        st.subheader("Challenger Model")
         if st.button(f"Retrain {model_to_manage} to Create Challenger", use_container_width=True):
             with st.spinner(f"Retraining {model_to_manage}... This may take a moment."):
                 challenger_model = retrain_model(model_to_manage, df_featured)
@@ -470,12 +470,12 @@ with tab5:
         c1, c2 = st.columns(2)
         with c1:
             with st.container(border=True):
-                st.markdown("🏆 *Champion Metrics*")
+                st.markdown("*Champion Metrics*")
                 st.metric("R² Score", f"{metrics_champ['R²']:.4f}")
                 st.metric("Mean Absolute Error", f"{metrics_champ['MAE']:.4f}")
         with c2:
             with st.container(border=True):
-                st.markdown("⚔️ *Challenger Metrics*")
+                st.markdown("*Challenger Metrics*")
                 st.metric("R² Score", f"{metrics_chall['R²']:.4f}", delta=f"{metrics_chall['R²'] - metrics_champ['R²']:.4f}")
                 st.metric("Mean Absolute Error", f"{metrics_chall['MAE']:.4f}", delta=f"{metrics_chall['MAE'] - metrics_champ['MAE']:.4f}", delta_color="inverse")
 
@@ -489,10 +489,10 @@ with tab5:
                 st.success(f"New {model_to_manage} model promoted to Champion!")
                 st.rerun()
         else:
-            st.warning("⚠️ **Keep Champion:** The current Champion model performs better or equally well. Do not promote the challenger.")
+            st.warning("**Keep Champion:** The current Champion model performs better or equally well. Do not promote the challenger.")
 
     st.markdown("---")
-    st.subheader("🔎 Model Monitoring: Data Drift")
+    st.subheader("Model Monitoring: Data Drift")
     st.info("This tab helps detect if the new data has statistically shifted away from the data the model was trained on, which could impact performance.")
 
     reference_df = df_featured.sample(frac=0.7, random_state=42)
@@ -529,7 +529,7 @@ with tab5:
     st.plotly_chart(fig_drift, use_container_width=True)
 
 with tab6:
-    st.header("📌 Conclusion & Recommendations")
+    st.header("Conclusion & Recommendations")
 
     st.subheader("Summary of Findings")
     st.markdown("""
