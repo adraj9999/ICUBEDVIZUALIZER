@@ -20,7 +20,7 @@ import asyncio
 import copy
 import xgboost as xgb
 import lightgbm as lgb
-import re # Import regular expressions for cleaning names
+import re
 
 # Assume these functions exist in a 'utils.py' file as per the original import
 # If not, you need to define them.
@@ -34,7 +34,6 @@ except ImportError:
         return df
     def prepare_data_for_model(df, features):
         st.warning("`prepare_data_for_model` function not found. Attempting to use data as is.")
-        # Ensure all required features are present, fill with 0 if not
         for feature in features:
             if feature not in df.columns:
                 df[feature] = 0
@@ -49,7 +48,7 @@ try:
 except Exception:
     st.warning("Logo image not found at 'src/ibm_logo.png'.")
 
-st.title("🏥 AI-Powered ICU Bed Forecasting")
+st.title("AI-Powered ICU Bed Forecasting")
 st.markdown("---")
 
 # ───────────────── Constants and Configuration ──────────────────
@@ -111,12 +110,9 @@ def retrain_model(model_name: str, data: pd.DataFrame) -> Any:
     y = data[DEFAULT_TARGET_COL]
     X = data.drop(columns=DEFAULT_EXCLUDED_COLS, errors='ignore').select_dtypes(include=np.number)
 
-    # --- FIX APPLIED HERE ---
     # Sanitize column names to be compatible with LightGBM
-    # This replaces any character that is not a letter, number, or underscore with an empty string
     sanitized_cols = [re.sub(r'[^A-Za-z0-9_]+', '', col) for col in X.columns]
     X.columns = sanitized_cols
-    # --- END OF FIX ---
 
     X_train, _, y_train, _ = train_test_split(X, y, test_size=0.2, random_state=42)
 
@@ -134,7 +130,7 @@ def retrain_model(model_name: str, data: pd.DataFrame) -> Any:
 
 def render_time_series_forecast(df_featured: pd.DataFrame, model, model_name: str):
     """Renders the time series forecasting UI."""
-    st.header(f"🔮 Dynamic Time Series Forecasting ({model_name})")
+    st.header(f"Dynamic Time Series Forecasting ({model_name})")
     st.info("Generate a dynamic 14-day forecast for a selected region based on the model's current prediction.")
 
     region = st.selectbox(
@@ -217,23 +213,23 @@ if not MODELS:
     st.stop()
 
 # ─────────────────── Sidebar to Select Model ────────────────────────
-st.sidebar.header("⚙️ Controls")
+st.sidebar.header("Controls")
 active_model_name = st.sidebar.selectbox("Select Active Model", options=list(MODELS.keys()))
 model = MODELS[active_model_name]
 model_features = model.feature_names_in_
 
 # ───────────────────────── Main Application Tabs ────────────────────
 tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
-    "📊 Dashboard & Explainability",
-    "🌍 Bulk Forecast",
-    "⚖️ Model Comparison",
-    "🔍 Data Explorer & EDA",
-    "🛠️ MLOps & Monitoring",
-    "📌 Conclusion & Recommendations"
+    "Dashboard & Explainability",
+    "Bulk Forecast",
+    "Model Comparison",
+    "Data Explorer & EDA",
+    "MLOps & Monitoring",
+    "Conclusion & Recommendations"
 ])
 
 with tab1:
-    st.header(f"📍 Single Region Forecast ({active_model_name})")
+    st.header(f"Single Region Forecast ({active_model_name})")
 
     col_left, col_right = st.columns([1, 2])
     with col_left:
@@ -244,15 +240,15 @@ with tab1:
             st.metric("Available Hospital Beds", f"{int(region_row['Available Hospital Beds'].iloc[0]):,}")
         st.metric("Adult Population", f"{int(region_row['Adult Population'].iloc[0]):,}")
 
-        if st.button(f"🔮 Predict & Explain for {region}", type="primary", use_container_width=True):
+        if st.button(f"Predict & Explain for {region}", type="primary", use_container_width=True):
             try:
                 X_single = prepare_data_for_model(region_row, model_features)
                 pred_single = float(model.predict(X_single)[0])
 
-                st.subheader("📈 Prediction Results")
+                st.subheader("Prediction Results")
                 st.metric("Predicted Available ICU Beds", f"{pred_single:,.0f}")
 
-                with st.expander("🔬 View Prediction Explanation (SHAP & LIME)", expanded=True):
+                with st.expander("View Prediction Explanation (SHAP & LIME)", expanded=True):
                     X_all = prepare_data_for_model(df_featured, model_features)
 
                     st.subheader("SHAP Waterfall Plot")
@@ -293,7 +289,7 @@ with tab1:
         st.plotly_chart(fig, use_container_width=True)
 
 with tab2:
-    st.header("🌍 Forecast for All HRRs")
+    st.header("Forecast for All HRRs")
     if 'forecast_df' not in st.session_state:
         st.session_state.forecast_df = None
 
@@ -310,7 +306,7 @@ with tab2:
         fc = st.session_state.forecast_df
         st.success("Bulk forecast complete!")
         st.dataframe(fc, use_container_width=True)
-        st.download_button("📥 Download Forecast CSV", data=fc.to_csv(index=False), file_name="icu_forecast_all_regions_reduced.csv")
+        st.download_button("Download Forecast CSV", data=fc.to_csv(index=False), file_name="icu_forecast_all_regions_reduced.csv")
 
         top_regions_pred = fc.nlargest(20, "Predicted_Available_ICU_Beds")
         fig2 = px.bar(
@@ -322,7 +318,7 @@ with tab2:
         st.plotly_chart(fig2, use_container_width=True)
 
 with tab3:
-    st.header("⚖️ Model Comparison")
+    st.header("Model Comparison")
     st.info("Metrics are calculated on a 20% hold-out test set.")
 
     if len(MODELS) < 2:
@@ -379,8 +375,8 @@ with tab3:
         st.plotly_chart(fig_errors, use_container_width=True)
 
 with tab4:
-    st.header("🔍 Data Explorer & EDA")
-    st.subheader("📈 Historical ICU Bed Needs Projection")
+    st.header("Data Explorer & EDA")
+    st.subheader("Historical ICU Bed Needs Projection")
     time_cols = [col for col in df_raw.columns if "ICU Beds Needed" in col]
     if time_cols:
         default_regions = df_raw["HRR"].head(3).tolist()
@@ -398,7 +394,7 @@ with tab4:
         st.info("Historical time series columns not found in the dataset.")
 
     st.markdown("---")
-    st.subheader("📊 Exploratory Scatter Plot")
+    st.subheader("Exploratory Scatter Plot")
     st.markdown("Explore relationships between different features in the dataset.")
 
     numeric_cols = df_featured.select_dtypes(include=np.number).columns
@@ -418,8 +414,8 @@ with tab4:
     render_time_series_forecast(df_featured, model, active_model_name)
 
 with tab5:
-    st.header("🛠️ MLOps & Monitoring")
-    st.subheader("🧪 Model Management (Champion-Challenger)")
+    st.header("MLOps & Monitoring")
+    st.subheader("Model Management (Champion-Challenger)")
     st.info("Retrain models and compare them against the current champion to ensure peak performance.")
 
     if not st.session_state.champion_models:
@@ -431,12 +427,12 @@ with tab5:
 
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("🏆 Champion Model")
+        st.subheader("Champion Model")
         st.write(f"*Type:* {model_to_manage}")
         st.write(f"This is the current production model.")
 
     with col2:
-        st.subheader("⚔️ Challenger Model")
+        st.subheader("Challenger Model")
         if st.button(f"Retrain {model_to_manage} to Create Challenger", use_container_width=True):
             with st.spinner(f"Retraining {model_to_manage}... This may take a moment."):
                 challenger_model = retrain_model(model_to_manage, df_featured)
@@ -473,29 +469,29 @@ with tab5:
         c1, c2 = st.columns(2)
         with c1:
             with st.container(border=True):
-                st.markdown("🏆 *Champion Metrics*")
+                st.markdown("*Champion Metrics*")
                 st.metric("R² Score", f"{metrics_champ['R²']:.4f}")
                 st.metric("Mean Absolute Error", f"{metrics_champ['MAE']:.4f}")
         with c2:
             with st.container(border=True):
-                st.markdown("⚔️ *Challenger Metrics*")
+                st.markdown("*Challenger Metrics*")
                 st.metric("R² Score", f"{metrics_chall['R²']:.4f}", delta=f"{metrics_chall['R²'] - metrics_champ['R²']:.4f}")
                 st.metric("Mean Absolute Error", f"{metrics_chall['MAE']:.4f}", delta=f"{metrics_chall['MAE'] - metrics_champ['MAE']:.4f}", delta_color="inverse")
 
         st.markdown("---")
         st.subheader("Recommendation")
         if metrics_chall['R²'] > metrics_champ['R²'] and metrics_chall['MAE'] < metrics_champ['MAE']:
-            st.success("✅ **Promote Challenger:** The Challenger model shows superior performance on the test set.")
+            st.success("Promote Challenger: The Challenger model shows superior performance on the test set.")
             if st.button("Promote Challenger to Champion", type="primary"):
                 st.session_state.champion_models[model_to_manage] = challenger_model
                 del st.session_state.challenger_models[model_to_manage]
                 st.success(f"New {model_to_manage} model promoted to Champion!")
                 st.rerun()
         else:
-            st.warning("⚠️ **Keep Champion:** The current Champion model performs better or equally well.")
+            st.warning("Keep Champion: The current Champion model performs better or equally well.")
 
     st.markdown("---")
-    st.subheader("🔎 Model Monitoring: Data Drift")
+    st.subheader("Model Monitoring: Data Drift")
     st.info("This tab helps detect if the new data has statistically shifted away from the data the model was trained on.")
 
     reference_df = df_featured.sample(frac=0.7, random_state=42)
@@ -516,9 +512,9 @@ with tab5:
     col2.metric("P-Value", f"{p_value:.4f}")
 
     if p_value < 0.05:
-        st.warning(f"**Significant Drift Detected!** The distribution of '{feature_to_check}' is statistically different from the reference data (p < 0.05).")
+        st.warning(f"Significant Drift Detected! The distribution of '{feature_to_check}' is statistically different from the reference data (p < 0.05).")
     else:
-        st.success(f"**No significant drift detected.** The distribution of '{feature_to_check}' appears stable.")
+        st.success(f"No significant drift detected. The distribution of '{feature_to_check}' appears stable.")
 
     fig_drift = go.Figure()
     fig_drift.add_trace(go.Histogram(x=ref_data, name='Reference Data', opacity=0.75))
@@ -532,7 +528,7 @@ with tab5:
     st.plotly_chart(fig_drift, use_container_width=True)
 
 with tab6:
-    st.header("📌 Conclusion & Recommendations")
+    st.header("Conclusion & Recommendations")
     st.subheader("Summary of Findings")
     st.markdown("""
     - **High Predictive Accuracy**: The models demonstrate a strong ability to forecast ICU bed availability.
